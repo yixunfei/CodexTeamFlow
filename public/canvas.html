@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Codex Agent Team Canvas</title>
+    <link rel="stylesheet" href="/assets/canvas.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Codex + MCP + Agent Team</p>
+          <h1>Agent Team Canvas</h1>
+          <p class="subcopy">
+            Visualize tasks, inspect stage artifacts, and edit the runtime configuration from one place.
+          </p>
+        </div>
+        <div class="header-status">
+          <div class="status-chip" id="backend-chip">Loading backend</div>
+          <div class="status-chip subtle" id="restart-chip">Current process config</div>
+          <button class="ghost-button" id="refresh-all-button" type="button">Refresh</button>
+        </div>
+      </header>
+
+      <div class="workspace-grid">
+        <aside class="panel rail-panel">
+          <section class="stack-block">
+            <div class="panel-title-row">
+              <div>
+                <p class="section-kicker">Create</p>
+                <h2>New task</h2>
+              </div>
+            </div>
+            <form id="task-form" class="stack-form">
+              <label class="field">
+                <span>Goal</span>
+                <textarea
+                  id="goal-input"
+                  name="goal"
+                  rows="4"
+                  placeholder="Describe the implementation goal for the Agent Team."
+                  required
+                ></textarea>
+              </label>
+              <label class="field">
+                <span>Constraints</span>
+                <textarea
+                  id="constraints-input"
+                  name="constraints"
+                  rows="4"
+                  placeholder="One constraint per line. Example: Keep the existing MCP contract."
+                ></textarea>
+              </label>
+              <div class="inline-row">
+                <label class="checkbox-row">
+                  <input id="wait-checkbox" type="checkbox" />
+                  <span>Wait for full completion</span>
+                </label>
+              </div>
+              <div class="action-row">
+                <button class="primary-button" type="submit" data-action="plan">Plan only</button>
+                <button class="secondary-button" type="submit" data-action="run">Run workflow</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="stack-block">
+            <div class="panel-title-row">
+              <div>
+                <p class="section-kicker">Tasks</p>
+                <h2>Recent runs</h2>
+              </div>
+              <div class="tiny-meta" id="task-count">0 tasks</div>
+            </div>
+            <div id="task-list" class="task-list"></div>
+          </section>
+        </aside>
+
+        <main class="panel canvas-panel">
+          <section id="empty-state" class="empty-state">
+            <p class="section-kicker">Canvas</p>
+            <h2>No task selected</h2>
+            <p>Choose a task from the rail or create a new one to populate the stage canvas.</p>
+          </section>
+
+          <section id="task-view" class="task-view hidden">
+            <div class="hero-card">
+              <div>
+                <p class="section-kicker">Selected task</p>
+                <h2 id="task-title">Task title</h2>
+                <p id="task-summary" class="hero-summary"></p>
+              </div>
+              <div class="hero-meta-grid">
+                <div class="metric">
+                  <span>Status</span>
+                  <strong id="task-status">pending</strong>
+                </div>
+                <div class="metric">
+                  <span>Backend</span>
+                  <strong id="task-backend">local</strong>
+                </div>
+                <div class="metric">
+                  <span>Current stage</span>
+                  <strong id="task-stage">none</strong>
+                </div>
+                <div class="metric">
+                  <span>Updated</span>
+                  <strong id="task-updated">-</strong>
+                </div>
+              </div>
+              <div class="action-row wide">
+                <button class="secondary-button" id="rerun-button" type="button">Run again</button>
+                <button class="ghost-button" id="review-button" type="button">Refresh review</button>
+                <button class="danger-button" id="cancel-button" type="button">Cancel</button>
+              </div>
+            </div>
+
+            <section class="canvas-lane">
+              <div class="panel-title-row compact">
+                <div>
+                  <p class="section-kicker">Workflow</p>
+                  <h2>Execution canvas</h2>
+                </div>
+              </div>
+              <div id="stage-lane" class="stage-lane"></div>
+            </section>
+
+            <section class="detail-grid">
+              <article class="detail-card">
+                <div class="panel-title-row compact">
+                  <div>
+                    <p class="section-kicker">Runtime</p>
+                    <h2>Telemetry</h2>
+                  </div>
+                </div>
+                <dl class="telemetry-grid" id="runtime-grid"></dl>
+              </article>
+
+              <article class="detail-card">
+                <div class="panel-title-row compact">
+                  <div>
+                    <p class="section-kicker">History</p>
+                    <h2>Recent events</h2>
+                  </div>
+                </div>
+                <div id="history-list" class="history-list"></div>
+              </article>
+            </section>
+          </section>
+        </main>
+
+        <aside class="panel config-panel">
+          <section class="stack-block">
+            <div class="panel-title-row">
+              <div>
+                <p class="section-kicker">Settings</p>
+                <h2>Config editor</h2>
+              </div>
+              <div class="tiny-meta" id="config-path">-</div>
+            </div>
+            <div id="config-banner" class="notice-banner hidden"></div>
+            <form id="config-form" class="stack-form">
+              <div class="form-section">
+                <h3>Runtime</h3>
+                <label class="field">
+                  <span>Runtime mode</span>
+                  <select name="runtimeMode">
+                    <option value="local">local</option>
+                    <option value="assisted">assisted</option>
+                    <option value="agents">agents</option>
+                  </select>
+                </label>
+                <label class="checkbox-row">
+                  <input name="liveNarration" type="checkbox" />
+                  <span>Enable live narration</span>
+                </label>
+                <label class="field">
+                  <span>Shared model</span>
+                  <input name="model" type="text" />
+                </label>
+              </div>
+
+              <div class="form-section">
+                <h3>Role models</h3>
+                <label class="field">
+                  <span>Manager</span>
+                  <input name="managerModel" type="text" />
+                </label>
+                <label class="field">
+                  <span>Planner</span>
+                  <input name="plannerModel" type="text" />
+                </label>
+                <label class="field">
+                  <span>Implementer</span>
+                  <input name="implementerModel" type="text" />
+                </label>
+                <label class="field">
+                  <span>Reviewer</span>
+                  <input name="reviewerModel" type="text" />
+                </label>
+                <label class="field">
+                  <span>Tester</span>
+                  <input name="testerModel" type="text" />
+                </label>
+              </div>
+
+              <div class="form-section">
+                <h3>Transport</h3>
+                <label class="field">
+                  <span>Transport</span>
+                  <select name="transportMode">
+                    <option value="stdio">stdio</option>
+                    <option value="http">http</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>HTTP host</span>
+                  <input name="httpHost" type="text" />
+                </label>
+                <label class="field">
+                  <span>HTTP port</span>
+                  <input name="httpPort" type="number" min="1" max="65535" />
+                </label>
+                <label class="field">
+                  <span>HTTP path</span>
+                  <input name="httpPath" type="text" />
+                </label>
+              </div>
+
+              <div class="form-section">
+                <h3>Storage</h3>
+                <label class="field">
+                  <span>Task store path</span>
+                  <input name="storePath" type="text" />
+                </label>
+              </div>
+
+              <div class="action-row">
+                <button class="primary-button" id="save-config-button" type="submit">Save config</button>
+                <button class="ghost-button" id="reset-config-button" type="button">Reset overrides</button>
+              </div>
+            </form>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+    <script type="module" src="/assets/canvas.js"></script>
+  </body>
+</html>
